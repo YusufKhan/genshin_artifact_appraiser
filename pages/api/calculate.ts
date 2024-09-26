@@ -76,6 +76,7 @@ async function performCalculation(uid: string) {
         const target = characters[j];
         const charName = target.characterData._nameId;
         const artifacts = target.artifacts;
+        const totalScore = 0;
 
         if(teams.hasOwnProperty(charName)){
             //const teamMultipliers = teams[charName];
@@ -118,11 +119,13 @@ async function performCalculation(uid: string) {
         // Format numbers to .2f before joining
         const formattedRVs = characterRVs.map(value => {
             if (typeof value === 'number') {
-                return value.toFixed(1);
+              totalScore = totalScore + value;
+              return value.toFixed(2);
             } else {
                 return value; //Cuts the names short for table formatting
             }
         });
+        formattedRVs.push(totalScore.toFixed(2));
         formattedCharacterRVs.push(formattedRVs);
         //console.log(formattedCharacterRVs.join("\t")); // Output with tabs and formatting
 
