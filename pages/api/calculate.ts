@@ -76,7 +76,7 @@ async function performCalculation(uid: string) {
         const target = characters[j];
         const charName = target.characterData._nameId;
         const artifacts = target.artifacts;
-        const totalScore = 0;
+        let totalScore = 0;
 
         if(teams.hasOwnProperty(charName)){
             //const teamMultipliers = teams[charName];
