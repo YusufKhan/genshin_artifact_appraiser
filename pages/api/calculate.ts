@@ -128,7 +128,7 @@ async function performCalculation(uid: string) {
 
         allCharacterRVs.push(characterRVs);
     }
-    
+
     allCharacterRVs.sort((a, b) => {
         // Convert the elements at index 11 to numbers for comparison
         const numA = Number(a[11]);
@@ -141,8 +141,8 @@ async function performCalculation(uid: string) {
 }
 
 function getColorCode(value: number) {
-        const red = Math.min(255, Math.max(0, Math.round(255 * (1 - value))));
-        const green = Math.min(255, Math.max(0, Math.round(255 * (value))));
-        const alpha = Math.min(1, Math.max(0, 1-value)); // Scale opacity based on value
+        const red = Math.min(255, Math.max(0, Math.round(255 * (1 - value)*0.8)));
+        const green = Math.min(255, Math.max(0, Math.round(255 * (value)*0.8)));
+        const alpha = Math.min(1, Math.max(0, 1-value)*0.8); // Scale opacity based on value
         return `rgba(${red},${green},0,${alpha})`;
 }
