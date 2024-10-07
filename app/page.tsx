@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 //import UIDInput from '../components/UIDInput';
 //import { CharacterData } from '../types';
 import './globals.css';
@@ -29,6 +29,39 @@ const HomePage = () => {
   const [uid, setUid] = useState(''); // Define the uid state
   const [teams, setTeams] = useState<Teams>(initialTeams);
   const [characterData, setCharacterData] = useState<Character[]>([]); // Define the type for characterData
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  //const [data, setData] = useState<(string | number)[][]>([]);
+
+  useEffect(() => {
+    // Load cached data from localStorage
+    const savedUID = localStorage.getItem('uid');
+    //const savedData = localStorage.getItem('calculationData');
+    //const savedTeams = localStorage.getItem('teams');
+
+    if (savedUID) {
+      setUid(savedUID);
+    }
+
+    /* if (savedTeams) {
+      setTeams(JSON.parse(savedTeams));
+    } */
+
+    /* if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      const formattedData = parsedData.result.map((item: string[]) => ({
+        name: item[0],
+        values: item.slice(1).map(Number), // Ensure values are numbers
+      }));
+      setCharacterData(parsedData);
+      if (parsedData.teams) {
+        setTeams(parsedData.teams); // Ensure the teams data is correctly set
+      } else {
+        console.error('Teams data is missing in the saved data');
+      }
+    }*/
+
+  }, []);
 
   const handleChange = (character: string, index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -40,6 +73,10 @@ const HomePage = () => {
   };
 
   const handleUIDSubmit = async (uid: string) => {
+    setLoading(true);
+    setUid(uid);
+    setError(''); // Clear any previous error
+
     try {
       const data = await performCalculation(uid, teams);
       console.log('Response data:', data); // Log the response data to verify its structure
@@ -58,6 +95,11 @@ const HomePage = () => {
     } catch (error) {
       console.error('Error submitting UID:', error);
     }
+    localStorage.setItem('uid', uid); // Cache the UID
+    //localStorage.setItem('calculationData', JSON.stringify(data));
+
+    setLoading(false);
+
   };
 
   return (
@@ -71,20 +113,33 @@ const HomePage = () => {
             placeholder="Enter UID"
             value={uid}
             onChange={(event) => setUid(event.target.value)} // Update the uid state
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                handleUIDSubmit(uid);
+              }
+            }}
         autoComplete="on"
         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-4 py-2 w-full max-w-md"
       />
        <button onClick={() => handleUIDSubmit(uid)} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
         Submit
       </button>
-
+      {loading && (
+            <div className="loading-screen">
+              <p>Loading...</p>
+            </div>
+          )}
+          {error && (
+            <div className="error-message text-red-500 mt-4">
+              <p>{error}</p>
+            </div>)}
       {/* </div></form> */}
         </div>
       </section>
 
       {characterData.length > 0 && (
         <section className="character-section py-8">
-          <h2 className="text-3xl font-semibold text-center text-white">Character Data</h2>
+          <h2 className="text-3xl font-semibold text-center text-white mb-2">Character Data</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto bg-white shadow-md rounded-lg">
               <thead>
@@ -103,19 +158,10 @@ const HomePage = () => {
                   <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
                     <td className="py-3 px-6 text-left whitespace-nowrap">{character.name}</td>
                     {character.values.map((value, i) => {
-                    /* if (i === 0) {
-                      // Render the first value with a transparent background
-                      return (
-                        <td key={i} className="py-3 px-6 text-left whitespace-nowrap" style={{ backgroundColor: 'transparent' }}>
-                          {value}
-                        </td>
-                      );
-                    } else { */
-                        const red = 255-Number(value)/100*255; //Math.min(255, Math.max(0, Math.round(255 * (Number(value)))));
-                        const green = Number(value)/100*255; //Math.min(255, Math.max(0, Math.round(255 * (Number(value)))));
-                        const alpha = 1-Number(value)/100; // Scale opacity based on value
+                        const red = 255-Number(value)/100*255; 
+                        const green = Number(value)/100*255;
+                        const alpha = 1-Number(value)/100;
                         const color = `rgba(${red},${green},0,${alpha})`;
-                        //const backgroundColor = typeof color === 'string' ? color : 'transparent';
                         return (
                           <td key={i} className="py-3 px-6 text-center whitespace-nowrap" style={{ backgroundColor:color }}>
                             {value}
@@ -130,12 +176,12 @@ const HomePage = () => {
           </div>
         </section>
       )}
-      <h2 className="mt-4 text-3xl font-semibold text-center text-white">Editable Weights</h2>
+      <h2 className="mt-6 text-3xl font-semibold text-center text-white">Editable Weights</h2>
         <div className="overflow-x-auto">
         {characterData.length > 0 &&  (
             <table className="min-w-full table-auto bg-blue shadow-md rounded-lg">
               <thead>
-                <tr className="bg-gray-200 text-gray-900 uppercase leading-normal">
+                <tr className="bg-gray-200 text-gray-600 text-sm uppercase leading-normal">
                   <th className="py-3 px-6 text-left">Character</th>
                   <th className="py-3 px-6 text-left">HP</th>
                   <th className="py-3 px-6 text-left">ATK</th>
@@ -151,16 +197,17 @@ const HomePage = () => {
               </thead>
               <tbody>
                 {Object.entries(teams).map(([character, values], characterIndex) => (
-                  <tr key={characterIndex}>
-                    <td className="py-2 px-4 text-white text-sm text-center align-top">{character}</td>
+                  <tr key={characterIndex} style={{ backgroundColor: "transparent" }}>
+                    <td className="py-3 px-6 text-left text-gray-200 align-top">{character}</td>
                     {values.map((value, index) => (
                       <td key={index} className="p-0 align-top">
                         <input
-                          type="text"
+                          type="number"
                           value={value}
                           onChange={(event) => handleChange(character, index, event)}
                           className="w-full h-full border text-white text-center m-0"
                           style={{ backgroundColor: '#08192b', fontSize: '0.875rem', borderRadius: '0', height: '100%' }} // Custom styles for text size and padding
+                          step="any"
                         />
                       </td>
                     ))}
@@ -169,6 +216,11 @@ const HomePage = () => {
               </tbody>
             </table>
           )}
+          </div>
+        <div className="flex justify-center mt-4">
+        <button onClick={() => handleUIDSubmit(uid)} className="px-4 py-2 bg-blue-500 text-white rounded">
+          Update
+        </button>
         </div>
     </div>
   );

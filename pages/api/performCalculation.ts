@@ -1,5 +1,26 @@
-import axiosInstance from '../../axiosConfig';
+//import axiosInstance from '../axiosConfig';
 import { AxiosError } from 'axios';
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
+
+const axiosInstance = axios.create({
+  //baseURL: 'http://your-api-base-url.com', // Replace with your API base URL
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+axiosRetry(axiosInstance, {
+  retries: 3, // Number of retries
+  retryDelay: (retryCount) => {
+    return retryCount * 1000; // Time between retries (in ms)
+  },
+  retryCondition: (error) => {
+    // Retry on network errors or 5xx status codes
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || (error.response && error.response.status >= 500) || false;
+  },
+});
 
 type Teams = {
     [key: string]: number[];

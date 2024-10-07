@@ -4,6 +4,9 @@ import axiosRetry from 'axios-retry';
 // Set a longer timeout duration (e.g., 10000ms)
 const axiosInstance = axios.create({
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Add a retry mechanism
